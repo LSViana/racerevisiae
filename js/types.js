@@ -35,12 +35,9 @@ class GameController extends GameObject {
     super();
     this.ctx2D = ctx2D;
     this.width = width;
-    this.height = width;
+    this.height = height;
+    this.active = true;
     this.lastTick = new Date();
-    /**
-     * @type {Player[]}
-     */
-    this.leftUserPlayers = [];
     /**
      * @type {Number[]}
      */
@@ -50,31 +47,47 @@ class GameController extends GameObject {
      */
     this.maps = [];
     /**
-     * @type {GameMap}
+     * @type {GameMap[]}
      */
-    this.activeMap = null;
+    this.activeMaps = [];
+    /**
+     * @type {Movable[]}
+     */
+    this.activePlayers = [];
   }
 
   /**
-   * @param {Movable} player 
+   * @param {GameMap} map 
    */
-  addLeftPlayer(player) {
-    this.leftUserPlayers.push(player);
-    this.activeMap.players.push(new MovableAtMap(this.activeMap, player));
+  addActiveMap(map) {
+    map.active = true;
+    this.activeMaps.push(map);
+  }
+
+  /**
+   * @param {GameMap} map 
+   */
+  deactivateMap(map) {
+    let mapIndex = this.activeMaps.indexOf(map);
+    if (mapIndex != -1) {
+      map.active = false;
+      this.activeMaps.splice(mapIndex, 1);
+    }
   }
 
   tick(elapsed) {
-    this.activeMap.tick(elapsed);
-    for(let player of this.leftUserPlayers)
-      player.tick(elapsed);
-    // Drawing after all
-    redraw(this);
+    if (this.active) {
+      for (let map of this.activeMaps)
+        map.tick(elapsed);
+      // Drawing after all
+      redraw(this);
+    }
   }
 
 }
 
 class Movable extends Drawable {
-  constructor(userControlled = false, x, y, width, height, speed = 0) {
+  constructor(userControlled = false, x, y, width, height, speed = 0, movingKeys) {
     super();
     this.userControlled = userControlled;
     this.x = x;
@@ -92,30 +105,33 @@ class Movable extends Drawable {
     this.accMultY = .97;
     this.spdX = 0;
     this.spdY = 0;
+    this.movingKeys = movingKeys;
   }
 
   tick(elapsed) {
-    let offsetX = 0;
-    let offsetY = 0;
-    if(gameController.keys[65] === true)
-      offsetX -= this.speed;
-    if(gameController.keys[68] === true)
-      offsetX += this.speed;
-    if(gameController.keys[87] === true)
-      offsetY -= this.speed;
-    if(gameController.keys[83] === true)
-      offsetY += this.speed;
+    if (this.userControlled) {
+      let offsetX = 0;
+      let offsetY = 0;
+      if (gameController.keys[this.movingKeys.left] === true)
+        offsetX -= this.speed;
+      if (gameController.keys[this.movingKeys.right] === true)
+        offsetX += this.speed;
+      if (gameController.keys[this.movingKeys.top] === true)
+        offsetY -= this.speed;
+      if (gameController.keys[this.movingKeys.down] === true)
+        offsetY += this.speed;
+      this.accelerate(elapsed, offsetX, offsetY);
+    }
     this.reduceAcceleration();
-    this.accelerate(elapsed, offsetX, offsetY);
   }
 
   accelerate(elapsed, x, y) {
     this.accX += (x + (x - this.accX)) * this.dragX;
     this.accY += (y + (y - this.accY)) * this.dragY;
-    if(Math.abs(this.accX) > this.maxAccX) {
+    if (Math.abs(this.accX) > this.maxAccX) {
       this.accX = this.accX > 0 ? this.maxAccX : -this.maxAccX;
     }
-    if(Math.abs(this.accY) > this.maxAccY) {
+    if (Math.abs(this.accY) > this.maxAccY) {
       this.accY = this.accY > 0 ? this.maxAccY : -this.maxAccY;
     }
     this.spdX = this.accX * elapsed;
@@ -124,17 +140,36 @@ class Movable extends Drawable {
     this.y += this.spdY;
   }
 
+  verifyCollision(other) {
+    throw 'This method must be overridden';
+  }
+
   reduceAcceleration() {
-    if(Math.abs(this.accX) < 10e-3)
+    if (Math.abs(this.accX) < 10e-3)
       this.accX = 0;
     else {
       this.accX *= this.accMultX;
     }
     //
-    if(Math.abs(this.accY) < 10e-3)
+    if (Math.abs(this.accY) < 10e-3)
       this.accY = 0;
     else
       this.accY *= this.accMultY;
+  }
+
+  /**
+   * @param {GameMap} map
+   * @param {Movable} other 
+   */
+  collideWithMovable(map, other) {
+    if (this instanceof SCerevisiae) {
+      if (other instanceof GameSugar) {
+        let indexOfOther = map.items.indexOf(other);
+        if (indexOfOther != -1) {
+          map.items.splice(indexOfOther, 1);
+        }
+      }
+    }
   }
 
 }
@@ -147,9 +182,10 @@ class SCerevisiae extends Movable {
    * @param {Number} y 
    * @param {Number} width 
    * @param {Number} height 
+   * @param {Number} speed
    */
-  constructor(userControlled = false, x, y, width, height, speed = 1) {
-    super(userControlled);
+  constructor(userControlled = false, x, y, width, height, speed = 1, movingKeys) {
+    super(userControlled, x, y, width, height, speed, movingKeys);
     this.x = x;
     this.y = y;
     this.width = width;
@@ -169,11 +205,27 @@ class SCerevisiae extends Movable {
     super.tick(elapsed);
   }
 
+  /**
+   * @param {Movable} other 
+   */
+  verifyCollision(other) {
+    return (
+        // From Left
+        this.x + this.width >= other.x - other.width / 2 &&
+        // From Top
+        this.y + this.height >= other.y - other.height / 2 &&
+        // From Right
+        this.x - this.width <= other.x + other.width / 2 &&
+        // From Bottom
+        this.y - this.height <= other.y + other.height / 2
+      );
+  }
+
 }
 
 class MovableAtMap {
   /**
-   * @param {Map} map 
+   * @param {GameMap} map 
    * @param {Movable} movable 
    * @param {Boolean} allowedToCrossBorders 
    */
@@ -186,13 +238,14 @@ class MovableAtMap {
 
 class GameMap extends Drawable {
 
-  constructor(x, y, width, height, wallBounce = .1) {
+  constructor(x, y, width, height, wallBounce = .1, active = false) {
     super();
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
     this.wallBounce = wallBounce;
+    this.active = active;
     /**
      * @type {GameItem[]}
      */
@@ -207,19 +260,48 @@ class GameMap extends Drawable {
     throw Error("This method must be overridden");
   }
 
+  addPlayer(player, allowedToCrossBorders = false) {
+    if (this.active) {
+      gameController.activePlayers.push(player);
+    }
+    let movableAtMap = new MovableAtMap(this, player, allowedToCrossBorders);
+    this.players.push(movableAtMap);
+  }
+
+  removePlayer(player) {
+    let indexOfMovable = -1;
+    let movableAtMap = this.players.filter((a, index) => {
+      let result = a.movable == player;
+      if (result)
+        indexOfMovable = index;
+      return result;
+    });
+    if (indexOfMovable != -1) {
+      this.players.splice(indexOfMovable, 1);
+    }
+    // Removing from active players
+    if (this.active) {
+      let indexOfPlayer = gameController.activePlayers.indexOf(player);
+      if (indexOfPlayer != -1) {
+        gameController.activePlayers.splice(indexOfPlayer, 1);
+      }
+    }
+  }
+
   tick(elapsed) {
-    for(let item of this.items) {
+    for (let item of this.items) {
       item.tick(elapsed);
     }
-    for(let player of this.players) {
-      if(!player.allowedToCrossBorders) {
-        if(player.movable.x - player.movable.width < this.x) {
+    for (let player of this.players) {
+      player.movable.tick(elapsed);
+      if (!player.allowedToCrossBorders) {
+        if (player.movable.x - player.movable.width < this.x) {
           player.movable.accX += player.movable.speed * this.wallBounce;
-        } else if(player.movable.x + player.movable.width > this.x + this.width) {
+        } else if (player.movable.x + player.movable.width > this.x + this.width) {
           player.movable.accX -= player.movable.speed * this.wallBounce;
-        } else if(player.movable.y - player.movable.height < this.y) {
+        } else if (player.movable.y - player.movable.height < this.y) {
           player.movable.accY += player.movable.speed * this.wallBounce;
-        } else if(player.movable.y + player.movable.height > this.y + this.height) {
+        } else if (player.movable.y + player.movable.height > this.y + this.height) {
           player.movable.accY -= player.movable.speed * this.wallBounce;
         }
       }
@@ -230,8 +312,8 @@ class GameMap extends Drawable {
 
 class SliderMap extends GameMap {
 
-  constructor(x, y, width, height, color1 = '#FF0F0F', color2 = '#0FFF0F', slideSpeed = 2, spawnRate = 1, itemTypes = [GameSugar]) {
-    super(x, y, width, height);
+  constructor(x, y, width, height, color1 = '#FF0F0F', color2 = '#0FFF0F', slideSpeed = 2, spawnRate = 1, itemTypes = [GameSugar], wallBounce = .1, active = false) {
+    super(x, y, width, height, wallBounce, active);
     this.color1 = color1;
     this.color2 = color2;
     this.spawnRate = spawnRate;
@@ -245,14 +327,14 @@ class SliderMap extends GameMap {
     this.firstRect = new Rectangle();
     this.firstRect.width = this.width;
     this.firstRect.height = this.height;
-    this.firstRect.y = 0;
-    this.firstRect.x = 0;
+    this.firstRect.y = this.y;
+    this.firstRect.x = this.x;
     //
     this.secondRect = new Rectangle();
     this.secondRect.width = this.width;
     this.secondRect.height = this.height;
     this.secondRect.y = -this.height;
-    this.secondRect.x = 0;
+    this.secondRect.x = this.x;
   }
 
   tick(elapsed) {
@@ -261,24 +343,46 @@ class SliderMap extends GameMap {
     this.firstRect.y += this.slideSpeed;
     this.secondRect.y += this.slideSpeed;
     // Rearranging map blocks
-    if(this.firstRect.y > this.height) {
+    if (this.firstRect.y > this.height) {
       this.firstRect.y = this.secondRect.y - this.secondRect.height;
-    } else if(this.secondRect.y > this.height) {
+    } else if (this.secondRect.y > this.height) {
       this.secondRect.y = this.firstRect.y - this.firstRect.height;
     }
+    // Tick at items
+    for (let item of this.items)
+      item.tick(elapsed);
     // Verifying if there's any need to spawn an item
     // 1000 => a second, in ms
-    if(this.accumulatedMilisseconds > 1000 / this.spawnRate) {
-      // Should spawn an item
-      let typeIndex = Math.round(Math.random() * (this.itemTypes.length - 1));
-      let type = this.itemTypes[typeIndex];
-      /**
-       * @type {GameItem}
-       */
-      let item = type.getDefaultInstance();
-      let x = Math.random() * (this.width - item.width * 2) + this.width;
-      let y = -item.height * 2;
-      this.accumulatedMilisseconds = 0;
+    if (Math.random() > .5) {
+      if (this.accumulatedMilisseconds > 1000 / this.spawnRate) {
+        // Should spawn an item
+        let typeIndex = Math.round(Math.random() * (this.itemTypes.length - 1));
+        let type = this.itemTypes[typeIndex];
+        /**
+         * @type {GameItem}
+         */
+        let item = type.getDefaultInstance();
+        let x = Math.random() * (this.width - item.width * 2) + this.x;
+        let y = -item.height * 2;
+        item.x = x;
+        item.y = y;
+        item.speed = this.slideSpeed;
+        this.items.push(item);
+        this.accumulatedMilisseconds = 0;
+      }
+    }
+    //
+    this.verifyCollisions();
+  }
+
+  verifyCollisions() {
+    for (let player of this.players) {
+      for (let item of this.items) {
+        if (player.movable.verifyCollision(item)) {
+          player.movable.collideWithMovable(this, item);
+          item.collideWithMovable(this, player.movable);
+        }
+      }
     }
   }
 
@@ -289,6 +393,11 @@ class SliderMap extends GameMap {
     ctx.fillRect(this.firstRect.x, this.firstRect.y, this.firstRect.width, this.firstRect.height);
     ctx.fillStyle = this.color2;
     ctx.fillRect(this.secondRect.x, this.secondRect.y, this.secondRect.width, this.secondRect.height);
+    // Drawing items
+    for (let item of this.items) {
+      ctx.fillStyle = item.color;
+      item.draw();
+    }
     ctx.fillStyle = _fillStyle;
   }
 
@@ -300,31 +409,37 @@ class SliderMap extends GameMap {
 }
 
 class GameItem extends Movable {
-  constructor(x, y, width, height, speed) {
+  constructor(x, y, width, height, speed, color) {
     super(false, x, y, width, height, speed);
+    this.color = color;
   }
 
   static getDefaultInstance() {
-    return new GameItem(0, 0, 0, 0, 0);
+    let color = "#" + getHexRandom() + getHexRandom() + getHexRandom();
+    return new GameItem(0, 0, 0, 0, 0, color);
   }
 }
 
 class GameSugar extends GameItem {
-  constructor(x, y, width, height, speed) {
-    super(x, y, width, height, speed);
+  constructor(x, y, width, height, speed, color) {
+    super(x, y, width, height, speed, color);
   }
 
   draw() {
     let ctx = gameController.ctx2D;
     //
     ctx.beginPath();
-    ctx.moveTo(this.x - this.width / 2, this.y - this.height / 2);
     ctx.fillRect(this.x - this.width / 2, this.y - this.height / 2, this.width, this.height);
     ctx.fill();
   }
 
+  tick(elapsed) {
+    this.y += this.speed;
+  }
+
   static getDefaultInstance() {
-    return new GameSugar(0, 0, 50, 50, 1);
+    let color = "#f44242";
+    return new GameSugar(0, 0, 50, 50, 1, color);
   }
 
 }

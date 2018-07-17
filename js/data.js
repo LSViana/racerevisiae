@@ -33,13 +33,35 @@ window.addEventListener("load", () => {
   }, 16);
 });
 
+const leftKeys = {
+  left: 65,
+  right: 68,
+  top: 87,
+  down: 83
+};
+
+const rightKeys = {
+  left: 37,
+  right: 39,
+  top: 38,
+  down: 40
+};
+
 /**
  * @param {GameController} gameController 
  */
 function startGameController(gameController) {
   startKeyDictionary(gameController);
+  // Left map
   let leftMap = new SliderMap(0, 0, gameController.width / 2, gameController.height);
   gameController.maps.push(leftMap);
-  gameController.activeMap = leftMap;
-  gameController.addLeftPlayer(new SCerevisiae(true, gameController.width / 4, gameController.height * .9, 20, 20));
+  gameController.addActiveMap(leftMap);
+  let leftPlayer = new SCerevisiae(true, gameController.width / 4, gameController.height * .9, 20, 20, 1, leftKeys);
+  leftMap.addPlayer(leftPlayer);
+  // Right map
+  let rightMap = new SliderMap(gameController.width / 2, 0, gameController.width / 2, gameController.height, "#00FFFF", "#FF0FFF");
+  gameController.maps.push(rightMap);
+  gameController.addActiveMap(rightMap);
+  let rightPlayer = new SCerevisiae(true, 3 * gameController.width / 4, gameController.height * .9, 20, 20, 1, rightKeys);
+  rightMap.addPlayer(rightPlayer);
 }
