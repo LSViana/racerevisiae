@@ -52,16 +52,14 @@ const rightKeys = {
  */
 function startGameController(gameController) {
   startKeyDictionary(gameController);
-  // Left map
-  let leftMap = new SliderMap(0, 0, gameController.width / 2, gameController.height);
-  gameController.maps.push(leftMap);
-  gameController.addActiveMap(leftMap);
-  let leftPlayer = new SCerevisiae(true, gameController.width / 4, gameController.height * .9, 20, 20, 1, leftKeys);
-  leftMap.addPlayer(leftPlayer);
-  // Right map
-  let rightMap = new SliderMap(gameController.width / 2, 0, gameController.width / 2, gameController.height, "#00FFFF", "#FF0FFF");
-  gameController.maps.push(rightMap);
-  gameController.addActiveMap(rightMap);
-  let rightPlayer = new SCerevisiae(true, 3 * gameController.width / 4, gameController.height * .9, 20, 20, 1, rightKeys);
-  rightMap.addPlayer(rightPlayer);
+  // Map
+  let itemTypes = [ GameSugar ];
+  let backgroundImages = [ './img/scenario.png', './img/scenario.png' ];
+  let mainMap = new SliderMap(0, 0, gameController.width, gameController.height, null, 2, 1, itemTypes, .1, false, 2, backgroundImages);
+  gameController.maps.push(mainMap);
+  gameController.addActiveMap(mainMap);
+  let leftPlayer = new SCerevisiae(true, gameController.width / 4, gameController.height * .8, 45, 90, 1, leftKeys, "./img/cerevisiae-blue.png");
+  mainMap.addPlayer(leftPlayer);
+  let rightPlayer = new SCerevisiae(true, 3 * gameController.width / 4, gameController.height * .8, 45, 90, 1, rightKeys, "./img/cerevisiae-brown.png");
+  mainMap.addPlayer(rightPlayer);
 }

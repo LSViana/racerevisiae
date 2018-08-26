@@ -87,7 +87,7 @@ class GameController extends GameObject {
 }
 
 class Movable extends Drawable {
-  constructor(userControlled = false, x, y, width, height, speed = 0, movingKeys) {
+  constructor(userControlled = false, x, y, width, height, speed = 0, movingKeys, backgroundImage) {
     super();
     this.userControlled = userControlled;
     this.x = x;
@@ -106,6 +106,7 @@ class Movable extends Drawable {
     this.spdX = 0;
     this.spdY = 0;
     this.movingKeys = movingKeys;
+    this.backgroundImage = backgroundImage;
   }
 
   tick(elapsed) {
@@ -184,21 +185,46 @@ class SCerevisiae extends Movable {
    * @param {Number} height 
    * @param {Number} speed
    */
-  constructor(userControlled = false, x, y, width, height, speed = 1, movingKeys) {
-    super(userControlled, x, y, width, height, speed, movingKeys);
+  constructor(userControlled = false, x, y, width, height, speed = 1, movingKeys, backgroundImage, rotationFactor = 1) {
+    super(userControlled, x, y, width, height, speed, movingKeys, backgroundImage);
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
     this.speed = speed;
+    this.rotationFactor = rotationFactor;
+    //
+    this.initializeMovable();
+  }
+
+  initializeMovable() {
+    if(this.backgroundImage) {
+      let id = guid();
+      let img = document.createElement("img");
+      document.body.appendChild(img);
+      img.id = id;
+      img.setAttribute("src", this.backgroundImage);
+      img.style.display = "none";
+      this.backgroundImageElement = img;
+    }
   }
 
   draw() {
     let ctx = gameController.ctx2D;
-    //
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.width, 0, 2 * Math.PI);
-    ctx.fill();
+    if(this.backgroundImage) {
+      let rotation = this.accX;
+      ctx.translate(this.x, this.y);
+      ctx.rotate(rotation * this.rotationFactor);
+      ctx.translate(-this.x, -this.y);
+      ctx.drawImage(this.backgroundImageElement, this.x - this.width / 2, this.y - this.height / 2, this.width, this.height);
+      ctx.translate(this.x, this.y);
+      ctx.rotate(-rotation * this.rotationFactor);
+      ctx.translate(-this.x, -this.y);
+    } else {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.width, 0, 2 * Math.PI);
+      ctx.fill();
+    }
   }
 
   tick(elapsed) {
@@ -238,7 +264,7 @@ class MovableAtMap {
 
 class GameMap extends Drawable {
 
-  constructor(x, y, width, height, wallBounce = .1, active = false) {
+  constructor(x, y, width, height, wallBounce = .1, active = false, backgroundAmount = 2, backgroundImages = null) {
     super();
     this.x = x;
     this.y = y;
@@ -246,6 +272,8 @@ class GameMap extends Drawable {
     this.height = height;
     this.wallBounce = wallBounce;
     this.active = active;
+    this.backgroundAmount = backgroundAmount;
+    this.backgroundImages = backgroundImages;
     /**
      * @type {GameItem[]}
      */
@@ -295,13 +323,13 @@ class GameMap extends Drawable {
     for (let player of this.players) {
       player.movable.tick(elapsed);
       if (!player.allowedToCrossBorders) {
-        if (player.movable.x - player.movable.width < this.x) {
+        if (player.movable.x - player.movable.width / 2 < this.x) {
           player.movable.accX += player.movable.speed * this.wallBounce;
-        } else if (player.movable.x + player.movable.width > this.x + this.width) {
+        } else if (player.movable.x + player.movable.width / 2 > this.x + this.width) {
           player.movable.accX -= player.movable.speed * this.wallBounce;
-        } else if (player.movable.y - player.movable.height < this.y) {
+        } else if (player.movable.y - player.movable.height / 2 < this.y) {
           player.movable.accY += player.movable.speed * this.wallBounce;
-        } else if (player.movable.y + player.movable.height > this.y + this.height) {
+        } else if (player.movable.y + player.movable.height / 2 > this.y + this.height) {
           player.movable.accY -= player.movable.speed * this.wallBounce;
         }
       }
@@ -312,41 +340,65 @@ class GameMap extends Drawable {
 
 class SliderMap extends GameMap {
 
-  constructor(x, y, width, height, color1 = '#FF0F0F', color2 = '#0FFF0F', slideSpeed = 2, spawnRate = 1, itemTypes = [GameSugar], wallBounce = .1, active = false) {
-    super(x, y, width, height, wallBounce, active);
-    this.color1 = color1;
-    this.color2 = color2;
+  constructor(x, y, width, height, colors = [ '#FF0F0F', '#0FFF0F' ], slideSpeed = 2, spawnRate = 1, itemTypes = [GameSugar], wallBounce = .1, active = false, backgroundAmount = 2, backgroundImages) {
+    super(x, y, width, height, wallBounce, active, backgroundAmount, backgroundImages);
+    this.colors = colors;
     this.spawnRate = spawnRate;
     this.itemTypes = itemTypes;
     this.slideSpeed = slideSpeed;
     this.accumulatedMilisseconds = 0;
-    this.initializeRects();
+    this.initializeMap();
   }
 
-  initializeRects() {
-    this.firstRect = new Rectangle();
-    this.firstRect.width = this.width;
-    this.firstRect.height = this.height;
-    this.firstRect.y = this.y;
-    this.firstRect.x = this.x;
-    //
-    this.secondRect = new Rectangle();
-    this.secondRect.width = this.width;
-    this.secondRect.height = this.height;
-    this.secondRect.y = -this.height;
-    this.secondRect.x = this.x;
+  initializeMap() {
+    //#region Rectangles
+    this.rects = [];
+    for(let i = 0; i < this.backgroundAmount; i++) {
+      let rect = new Rectangle();
+      rect.width = this.width;
+      rect.height = this.height;
+      rect.y = this.y - (this.height * i);
+      rect.x = this.x;
+      this.rects.push(rect);
+    }
+    this.nextRectNumber = this.rects.length - 1;
+    //#endregion
+    //#region Background Images
+    if(this.backgroundImages) {
+      this.backgroundDictionary = [];
+      for(let backgroundImage of this.backgroundImages) {
+        let id = guid();
+        let img = document.createElement("img");
+        img.id = id;
+        img.setAttribute("src", backgroundImage);
+        this.backgroundDictionary.push({
+          backgroundImageURI: backgroundImage,
+          backgroundImageElement: img
+        });
+        img.style.display = "none";
+        document.body.appendChild(img);
+      }
+    }
+    //#endregion
   }
-
+  
   tick(elapsed) {
     super.tick(elapsed);
     this.accumulatedMilisseconds += elapsed;
-    this.firstRect.y += this.slideSpeed;
-    this.secondRect.y += this.slideSpeed;
+    for(let rect of this.rects) {
+      rect.y += this.slideSpeed;
+    }
     // Rearranging map blocks
-    if (this.firstRect.y > this.height) {
-      this.firstRect.y = this.secondRect.y - this.secondRect.height;
-    } else if (this.secondRect.y > this.height) {
-      this.secondRect.y = this.firstRect.y - this.firstRect.height;
+    for(let i = 0; i < this.rects.length; i++) {
+      let rect = this.rects[i];
+      if(rect.y > this.height) {
+        let nextRect = this.rects[this.nextRectNumber];
+        rect.y = nextRect.y - nextRect.height;
+        this.nextRectNumber++;
+        if(this.nextRectNumber == this.rects.length) {
+          this.nextRectNumber = 0;
+        }
+      }
     }
     // Tick at items
     for (let item of this.items)
@@ -389,10 +441,21 @@ class SliderMap extends GameMap {
   draw() {
     let ctx = gameController.ctx2D;
     let _fillStyle = ctx.fillStyle;
-    ctx.fillStyle = this.color1;
-    ctx.fillRect(this.firstRect.x, this.firstRect.y, this.firstRect.width, this.firstRect.height);
-    ctx.fillStyle = this.color2;
-    ctx.fillRect(this.secondRect.x, this.secondRect.y, this.secondRect.width, this.secondRect.height);
+    if(this.backgroundImages) {
+      for(let i = 0; i < this.backgroundDictionary.length; i++) {
+        let rect = this.rects[i];
+        ctx.drawImage(this.backgroundDictionary[i].backgroundImageElement, rect.x, rect.y, rect.width, rect.height);
+      }
+    } else {
+      let currentColor;
+      for(let i = 0; i < this.rects.length; i++) {
+        let rect = this.rects[i];
+        if(this.colors[i])
+          currentColor = this.colors[i];
+        ctx.fillStyle = currentColor;
+        ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+      }
+    }
     // Drawing items
     for (let item of this.items) {
       ctx.fillStyle = item.color;
