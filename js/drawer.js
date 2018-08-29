@@ -7,7 +7,4 @@ function redraw(gameController) {
   // Drawing active maps
   for(let map of gameController.activeMaps)
     map.draw();
-  // Drawing players OVER the maps
-  for(let player of gameController.activePlayers)
-    player.draw();
 }

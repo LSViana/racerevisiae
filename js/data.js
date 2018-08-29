@@ -53,9 +53,9 @@ const rightKeys = {
 function startGameController(gameController) {
   startKeyDictionary(gameController);
   // Map
-  let itemTypes = [ GameSugar ];
+  let itemTypes = [ GameSugar, GameOxygen ];
   let backgroundImages = [ './img/scenario.png', './img/scenario.png' ];
-  let mainMap = new SliderMap(0, 0, gameController.width, gameController.height, null, 2, 1, itemTypes, .1, false, 2, backgroundImages);
+  let mainMap = new SliderMap(gameController, 0, 0, gameController.width, gameController.height, null, 2, 1, itemTypes, .1, false, 2, backgroundImages);
   gameController.maps.push(mainMap);
   gameController.addActiveMap(mainMap);
   let leftPlayer = new SCerevisiae(true, gameController.width / 4, gameController.height * .8, 45, 90, 1, leftKeys, "./img/cerevisiae-blue.png");

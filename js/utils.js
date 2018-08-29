@@ -12,3 +12,24 @@ function getHexRandom(min = 0, max = 255) {
   let strValue = value.toString(16);
   return strValue.padStart(2, "0");
 }
+
+function createDOMImage(backgroundImage) {
+  let id = guid();
+  let img = document.createElement("img");
+  document.body.appendChild(img);
+  img.id = id;
+  img.setAttribute("src", backgroundImage);
+  img.style.display = "none";
+  return img;
+}
+
+function getFormattedTime(milisseconds) {
+  let seconds = Math.floor(milisseconds / 1000);
+  let minutes = Math.floor(seconds / 60);
+  let secondsOfMinute = seconds % 60;
+  if (minutes <= 9)
+    minutes = "0" + minutes;
+  if (secondsOfMinute <= 9)
+    secondsOfMinute = "0" + secondsOfMinute;
+  return minutes + ":" + secondsOfMinute;
+}
