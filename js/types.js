@@ -448,7 +448,7 @@ class SliderMap extends GameMap {
       item.tick(elapsed);
     // Verifying if there's any need to spawn an item
     // 1000 => a second, in ms
-    if (Math.random() > .5) {
+    if (Math.random() > .25) {
       if (this.accumulatedMilisseconds > 1000 / this.spawnRate) {
         // Should spawn an item
         let typeIndex = Math.round(Math.random() * (this.itemTypes.length - 1));
