@@ -13,35 +13,33 @@ main{
     padding-top: 30px;
 }
 
-#menu-container{
+.menu-container{
     width: 80%;
     padding: 10px;
-    padding-top: 0px;
-
+    
     background-color: #604313;
-
+    
 }
-main h2{
+
+.header-container{
+    margin-bottom: 10px;
+}
+    main h2{
     text-align: center;
     font-size: 132px;
     width: 100%;
     color: azure;
 }
 
-#buttons-container{
+.buttons-container{
     display: flex;
-    padding-bottom: 25px;
     
     flex-flow: column nowrap;
     align-items: center;
     justify-content: space-evenly;
-    
-    height: 250px;
-    
-    
 }
 
-#buttons-container button{
+.buttons-container button{
     background-color: #604313;
     color: azure;
 
@@ -60,8 +58,21 @@ main h2{
     transition: border 0.2s;
 }
 
-#buttons-container button:hover{
+.buttons-container button:hover{
   border-style: solid;
     border-color:azure;
     border-width: 5px; 
+}
+
+.instructions-container{
+    display: flex;
+    flex-flow: row;
+    justify-content: space-between;
+}
+
+.instruction{
+    text-align: center;
+}
+.instruction h3{
+    color:azure;
 }

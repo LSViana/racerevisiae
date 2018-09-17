@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -10,24 +11,49 @@
     <link rel="stylesheet" type="text/css" media="screen" href="./css/main.css" />
     <script src="main.js"></script>
 </head>
+
 <body>
     <main>
-        <div id="menu-container">
+        <div class="menu-container header-container">
             <h2>RACEREVISIAE</h2>
 
-            <div id="buttons-container">
-                <button onclick="location.href='index.html'">PLAY</button>
-                <button>ABOUT</button>
+        </div>
+        <div class="menu-container">
+            <div class="instructions-container">
+                <div class="instruction">
+                    <h3>
+                        MOVIMENTO
+                    </h3>
+                    <img src="img/instrucoes_movimento.png" alt="">
+                </div>
+                <div class="instruction">
+                    <h3>
+                        MOVIMENTO
+                    </h3>
+                    <img src="img/instrucoes_movimento.png" alt="">
+                </div>
+                <div class="instruction">
+                    <h3>
+                        MOVIMENTO
+                    </h3>
+                    <img src="img/instrucoes_movimento.png" alt="">
+                </div>
+            </div>
+        </div>
+        <div class="menu-container">
+            <div class="buttons-container">
+                <button onclick="location.href='index.html'">JOGAR</button>
             </div>
         </div>
     </main>
 
     <canvas id="canvas">
     </canvas>
-  </body>
-  <script defer src="./js/utils.js"></script>
-  <script defer src="./js/types.js"></script>
-  <script defer src="./js/drawer.js"></script>
-  <script defer src="./js/keyCapturer.js"></script>
-  <script defer src="./js/data.js"></script>
+</body>
+<script defer src="./js/utils.js"></script>
+<script defer src="./js/types.js"></script>
+<script defer src="./js/drawer.js"></script>
+<script defer src="./js/keyCapturer.js"></script>
+<script defer src="./js/data.js"></script>
+
 </html>
