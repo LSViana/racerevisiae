@@ -16,16 +16,17 @@ main{
 
 .podium-container{
     display: flex;
-    flex-flow: column;
+    flex-flow: row  ;
     justify-content: space-between;
     width: 70%;
-    height: 60%;
     background-color:#604313;
 }
 
 .podium-item{
     padding: 10px;
     text-align: center;
+    width: 50%;
+    padding-top: 25px;
 }
 
 .podium-container{
@@ -42,3 +43,39 @@ main{
     border-width: 3px;
 }
 
+.podium-container h3{
+    font-size: 32px;
+}
+.podium-container h4{
+    font-size: 64px;
+}
+#button-container{
+    width: 70%;
+    text-align: right;
+    
+}
+
+#button-container button{
+    background-color: #604313;
+    color: azure !important;
+    
+    border-style: none;
+    /* border-style: solid;
+    border-color:azure;
+    border-width: 5px;  */
+    
+    font-family: Sans-serif;
+    font-weight: 700;
+    font-size: 32px;
+    border-width: 5px; 
+    border-style: solid;
+    border-color: #604313;
+
+    width:20%;
+    height: 15%;
+
+    transition: border 0.2s;
+}
+#button-container button:hover{
+      border-color:azure;
+  }

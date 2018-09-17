@@ -13,21 +13,25 @@
 
 <body>
     <main>
-        <div class="podium-container">
-            <div class="podium-item" style="margin-top: 20px;">
-                <h2>
-                    Vencedor é....
-                </h2>
-                
-                
-            </div>
-            <div class="podium-item pic">
+        <div class="podium-container" style="position: relative">
+            <h2 style="position: absolute;left:10px;">
+                Vencedor é....
+            </h2>
+            <div class="podium-item" >
                 <h3>NOME</h3>
-                <img style="width: 50px;"src="img/cerevisiae-blue.png" alt="" srcset="">
-                <p>
-                    Pontuação: <span>1000</span>
-                </p>
+                <img style="width: 26%;" src="img/cerevisiae-blue.png" alt="" srcset="">
             </div>
+            <div class="podium-item" style="position: relative;display: flex;flex-flow: column;justify-content: center">
+                <p>
+                    Pontuação:
+                </p>
+                <h4>
+                    1000
+                </h4>
+            </div>
+        </div>
+        <div id="button-container" >
+            <button><a href="index.html" style="text-decoration: none;color: azure">JOGAR NOVAMENTE </a> </button>
         </div>
     </main>
 
