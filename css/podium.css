@@ -52,7 +52,14 @@ main{
 #button-container{
     width: 70%;
     text-align: right;
-    
+}
+
+#img-winner {
+    transition: opacity .5s;
+}
+
+.invisible {
+    opacity: 0;
 }
 
 #button-container button{

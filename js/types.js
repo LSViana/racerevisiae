@@ -335,6 +335,8 @@ class GameMap extends Drawable {
   }
 
   tick(elapsed) {
+    if (!this.active)
+      return;
     // for (let item of this.items) {
     for (let i = 0; i < this.items.length; i++) {
       let item = this.items[i];
@@ -367,7 +369,7 @@ class GameMap extends Drawable {
 
 class SliderMap extends GameMap {
 
-  constructor(gameController, x, y, width, height, colors = ['#FF0F0F', '#0FFF0F'], slideSpeed = 2, spawnRate = 2, itemTypes = [GameSugar], wallBounce = .1, active = false, backgroundAmount = 2, backgroundImages, showTime = true) {
+  constructor(gameController, x, y, width, height, colors = ['#FF0F0F', '#0FFF0F'], slideSpeed = 2, spawnRate = 2, itemTypes = [GameSugar], wallBounce = .1, active = false, backgroundAmount = 2, backgroundImages, showTime = true, gameFinished = false, mapDuration = 10, colorToFade = "#000000", fadeDuration = 2, finishCallback) {
     super(gameController, x, y, width, height, wallBounce, active, backgroundAmount, backgroundImages, showTime);
     this.colors = colors;
     this.spawnRate = spawnRate;
@@ -378,6 +380,16 @@ class SliderMap extends GameMap {
     this.totalElapsedMilisseconds = 0;
     this.speedIncrementFactor = 0.00002;
     this.lastIncrementTime = 0;
+    this.gameFinished = gameFinished;
+    this.mapDuration = mapDuration;
+    this.colorToFade = colorToFade;
+    this.fadeIntensity = 0;
+    this.fading = false;
+    this.fadeDuration = fadeDuration;
+    /**
+     * @type {(GameMap) => void}
+     */
+    this.finishCallback = finishCallback;
     this.initializeMap();
   }
 
@@ -414,9 +426,27 @@ class SliderMap extends GameMap {
   }
 
   tick(elapsed) {
+    if (!this.active)
+      return;
     super.tick(elapsed);
     this.totalElapsedMilisseconds += elapsed;
     this.accumulatedMilisseconds += elapsed;
+    // Verifying the end of the game
+    if (!this.gameFinished && this.totalElapsedMilisseconds >= this.mapDuration * 1000) {
+      this.gameFinished = true;
+      this.fading = true;
+    }
+    // Fading the map away
+    if (this.fading) {
+      this.fadeIntensity += elapsed * (255 / (this.fadeDuration * 1000));
+      if (this.fadeIntensity > 255) {
+        this.fadeIntensity = 255;
+        this.fading = false;
+        this.active = false;
+        if(this.finishCallback)
+          this.finishCallback(this);
+      }
+    }
     // Incrementing multipliers
     let incrementTime = Math.floor(this.totalElapsedMilisseconds / 5000);
     if (incrementTime > this.lastIncrementTime) {
@@ -538,6 +568,11 @@ class SliderMap extends GameMap {
     ctx.fillText(textToPrint, this.width / 2, 48, textMetrics.width);
     ctx.font = _font;
     //
+    // Fading the map to finish
+    if (this.gameFinished) {
+      ctx.fillStyle = this.colorToFade + Math.round(this.fadeIntensity).toString("16").padStart(2, "0");
+      ctx.fillRect(this.x, this.x, this.width, this.height);
+    }
     ctx.fillStyle = _fillStyle;
   }
 
