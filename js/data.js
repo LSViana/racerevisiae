@@ -61,11 +61,16 @@ function goToPodium(map) {
  * @param {GameController} gameController 
  */
 function startGameController(gameController) {
+  // Adding settings to the LocalStorage
+  if(!localStorage.getItem("sliderMapDuration")) {
+    localStorage.setItem("sliderMapDuration", 60);
+  }
+  let sliderMapDuration = localStorage.getItem("sliderMapDuration");
   startKeyDictionary(gameController);
   // Map
   let itemTypes = [ GameSugar, GameOxygen ];
   let backgroundImages = [ './img/scenario.png', './img/scenario.png' ];
-  let mainMap = new SliderMap(gameController, 0, 0, gameController.width, gameController.height, null, 2, 1, itemTypes, .1, false, 2, backgroundImages, true, false, 10, "#000000", 1, goToPodium);
+  let mainMap = new SliderMap(gameController, 0, 0, gameController.width, gameController.height, null, 2, 1, itemTypes, .1, false, 2, backgroundImages, true, false, sliderMapDuration, "#000000", 1, goToPodium);
   gameController.maps.push(mainMap);
   gameController.addActiveMap(mainMap);
   let leftPlayer = new SCerevisiae(true, gameController.width / 4, gameController.height * .8, 45, 90, 1, leftKeys, "./img/cerevisiae-blue.png");
